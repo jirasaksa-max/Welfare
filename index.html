@@ -1,0 +1,1426 @@
+<!DOCTYPE html>
+<html lang="th" class="h-full bg-slate-50 text-slate-800">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welfare Management Era 5.0 - ระบบจัดการสวัสดิการพนักงาน</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js for Admin Analytics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Kanit Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Kanit', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0f3ff',
+                            100: '#e0e7ff',
+                            500: '#4f46e5',
+                            600: '#4338ca',
+                            700: '#3730a3',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Kanit', sans-serif; }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(226, 232, 240, 0.9);
+            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.03);
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="h-full flex flex-col bg-slate-50 text-slate-800 selection:bg-indigo-500 selection:text-white">
+
+    <!-- HEADER / TOP NAVIGATION -->
+    <header class="sticky top-0 z-40 w-full border-b border-slate-200 bg-white/90 backdrop-blur-md px-4 lg:px-8 py-3 shadow-xs">
+        <div class="max-w-7xl mx-auto flex items-center justify-between gap-4">
+            <!-- Brand Logo & System Title -->
+            <div class="flex items-center space-x-3">
+                <div class="h-10 w-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-md shadow-indigo-200">
+                    <i class="fa-solid fa-shield-heart text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg leading-tight flex items-center gap-2 text-slate-900">
+                        <span>WELFARE</span>
+                        <span class="text-xs px-2.5 py-0.5 rounded-full bg-indigo-100 text-indigo-700 font-medium border border-indigo-200">ERA 5.0</span>
+                    </h1>
+                    <p class="text-xs text-slate-500 hidden sm:block">ระบบจัดการและตรวจสอบสวัสดิการพนักงานอัจฉริยะ</p>
+                </div>
+            </div>
+
+            <!-- Portal Switcher (User vs Admin) & Profile Badge -->
+            <div class="flex items-center space-x-3 sm:space-x-4">
+                <div class="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200">
+                    <button id="btnUserView" onclick="switchPortal('user')" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 flex items-center gap-2 bg-white text-indigo-600 shadow-xs border border-slate-200">
+                        <i class="fa-solid fa-user-check"></i>
+                        <span>หน้าบ้าน (User Portal)</span>
+                    </button>
+                    <button id="btnAdminView" onclick="switchPortal('admin')" class="px-3.5 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:text-indigo-600 transition-all duration-200 flex items-center gap-2">
+                        <i class="fa-solid fa-user-gear"></i>
+                        <span>หลังบ้าน (Admin HR)</span>
+                    </button>
+                </div>
+
+                <!-- Current Active User Info -->
+                <div class="hidden md:flex items-center gap-3 border-l border-slate-200 pl-4">
+                    <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150" alt="Avatar" class="w-9 h-9 rounded-full object-cover ring-2 ring-indigo-500/20">
+                    <div class="text-left">
+                        <div class="text-xs font-semibold text-slate-900">จีระโรจน์ ศิริอุดมสุข</div>
+                        <div class="text-[10px] text-slate-500">EMP001 • <span class="text-indigo-600 font-semibold">พนักงานทั่วไป</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT CONTAINER -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 space-y-6">
+
+        <!-- ================= USER PORTAL VIEW ================= -->
+        <div id="portalUser" class="space-y-6">
+
+            <!-- Welcome Banner (Individual Employee Context) -->
+            <div class="glass-card rounded-2xl p-6 border-indigo-100 bg-gradient-to-r from-indigo-50/70 via-white to-purple-50/50">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div>
+                        <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-100/80 border border-indigo-200 text-indigo-700 text-xs font-medium mb-2">
+                            <i class="fa-regular fa-id-card"></i> ข้อมูลสิทธิ์สวัสดิการส่วนบุคคล ประจำปี 2026
+                        </div>
+                        <h2 class="text-2xl font-bold text-slate-900 tracking-tight">
+                            ยินดีต้อนรับคุณ <span class="text-indigo-600">จีระโรจน์ ศิริอุดมสุข</span>
+                        </h2>
+                        <p class="text-xs text-slate-600 mt-1 max-w-2xl">
+                            ตำแหน่ง: <span class="font-semibold text-slate-800">พนักงานทั่วไป (Staff / Officer)</span> • แผนก: <span class="font-semibold text-slate-800">ทีมขาย (Sales)</span> | ตรวจสอบรายการสวัสดิการเฉพาะที่คุณได้รับสิทธิ์และประวัติบันทึกการเบิกจ่าย
+                        </p>
+                    </div>
+
+                    <div class="bg-white px-4 py-2.5 rounded-xl border border-slate-200 shadow-xs text-xs font-medium text-slate-600 flex items-center gap-2">
+                        <i class="fa-solid fa-circle-check text-emerald-500"></i>
+                        <span>สถานะสิทธิ์: <strong class="text-slate-900">สมบูรณ์ประจำปี 2026</strong></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Welfare List Header & Search/Filter Controls -->
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2">
+                <div class="text-sm font-bold text-slate-900 flex items-center gap-2">
+                    <i class="fa-solid fa-list-check text-indigo-600"></i>
+                    <span>รายการสวัสดิการเฉพาะพนักงานระดับ "พนักงานทั่วไป"</span>
+                </div>
+
+                <div class="flex items-center gap-2 w-full sm:w-auto">
+                    <div class="flex items-center bg-white p-1 rounded-xl border border-slate-200 shadow-xs" id="userFilterButtonsGroup">
+                        <button onclick="filterUserList('all')" id="tabUserAll" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 text-white shadow-xs transition">
+                            ทั้งหมด (15)
+                        </button>
+                        <button onclick="filterUserList('eligible')" id="tabUserStatus" class="px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:text-indigo-600 transition">
+                            สิทธิ์ทั่วไป (3)
+                        </button>
+                        <button onclick="filterUserList('hr_record')" id="tabUserExpense" class="px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:text-indigo-600 transition">
+                            มีวงเงิน/บันทึก (12)
+                        </button>
+                    </div>
+
+                    <div class="relative flex-1 sm:w-60">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                        <input type="text" id="userSearchInput" onkeyup="searchUserList()" placeholder="ค้นหาสวัสดิการ..." class="w-full pl-9 pr-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-indigo-500 shadow-xs">
+                    </div>
+                </div>
+            </div>
+
+            <!-- INDIVIDUAL EMPLOYEE WELFARE TABLE -->
+            <div class="glass-card rounded-2xl overflow-hidden border border-slate-200 shadow-sm">
+                <div class="px-6 py-3.5 bg-slate-100/80 border-b border-slate-200 flex items-center justify-between">
+                    <span class="text-xs font-semibold text-slate-700 flex items-center gap-2">
+                        <i class="fa-solid fa-table text-indigo-600"></i>
+                        <span>ตารางแสดงรายการสวัสดิการและเพดานสิทธิ์ของคุณ (คลิกที่แถวเพื่อดูรายละเอียดและประวัติ)</span>
+                    </span>
+                    <span class="text-[11px] text-indigo-600 font-semibold bg-indigo-50 px-2.5 py-1 rounded-full border border-indigo-100">
+                        <i class="fa-solid fa-hand-pointer mr-1"></i> คลิกแถวเพื่อเปิด Pop-up
+                    </span>
+                </div>
+
+                <div class="overflow-x-auto custom-scrollbar bg-white">
+                    <table class="w-full text-left border-collapse text-xs">
+                        <thead>
+                            <tr class="border-b border-slate-200 bg-slate-50 text-slate-700">
+                                <th class="py-3.5 px-3 font-semibold text-center w-12">#</th>
+                                <th class="py-3.5 px-4 font-bold text-slate-900 min-w-[240px]">รายการสวัสดิการ</th>
+                                <th class="py-3.5 px-4 font-bold text-slate-900 min-w-[200px]">เพดานสิทธิ์ของคุณ (ระดับพนักงานทั่วไป)</th>
+                                <th class="py-3.5 px-4 text-center min-w-[180px] font-bold text-slate-900 bg-slate-100/60">สถานะ / ประวัติการบันทึก</th>
+                            </tr>
+                        </thead>
+                        <tbody id="userUnifiedTableBody" class="divide-y divide-slate-100 font-medium text-slate-700">
+                            <!-- JS Populates 15 Personal Staff Rows -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ================= ADMIN PORTAL VIEW ================= -->
+        <div id="portalAdmin" class="space-y-6 hidden">
+
+            <!-- Admin Banner Controls -->
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white border border-slate-200 p-6 rounded-2xl shadow-sm">
+                <div>
+                    <div class="flex items-center gap-2 mb-1">
+                        <span class="px-2.5 py-0.5 bg-indigo-100 border border-indigo-200 text-indigo-700 rounded-md text-[11px] font-semibold">HR Control Center</span>
+                        <span class="text-xs text-slate-500">ระบบบริหารสวัสดิการส่วนกลาง</span>
+                    </div>
+                    <h2 class="text-xl font-bold text-slate-900">แผงควบคุมการอัปโหลดข้อมูลและสรุปสถิติสวัสดิการ</h2>
+                    <p class="text-xs text-slate-500 mt-0.5">นำเข้าข้อมูลสวัสดิการด้วย Excel Template อ้างอิงรหัสพนักงาน และตรวจสอบสถิติภาพรวมองค์กร</p>
+                </div>
+
+                <div class="flex flex-wrap items-center gap-2">
+                    <!-- Template Upload Button -->
+                    <button onclick="openTemplateUploadModal()" class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl transition shadow-md shadow-indigo-100 flex items-center gap-2">
+                        <i class="fa-solid fa-file-excel"></i>
+                        <span>นำเข้าข้อมูลสวัสดิการ (Excel Template)</span>
+                    </button>
+                    <button onclick="exportWelfareReport()" class="px-4 py-2.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 text-xs font-medium rounded-xl transition flex items-center gap-2 shadow-xs">
+                        <i class="fa-solid fa-download text-slate-500"></i>
+                        <span>ส่งออกรายงาน (Excel)</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Admin Sub-tab Navigation -->
+            <div class="flex items-center bg-white p-1.5 rounded-2xl border border-slate-200 shadow-xs overflow-x-auto custom-scrollbar">
+                <button id="adminTabOverview" onclick="switchAdminSummaryTab('overview')" class="px-4 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-2 bg-indigo-600 text-white shadow-xs whitespace-nowrap">
+                    <i class="fa-solid fa-chart-pie"></i>
+                    <span>ภาพรวม & กราฟสถิติ</span>
+                </button>
+                <button id="adminTabLevel" onclick="switchAdminSummaryTab('level')" class="px-4 py-2 rounded-xl text-xs font-medium text-slate-600 hover:text-indigo-600 transition flex items-center gap-2 whitespace-nowrap">
+                    <i class="fa-solid fa-ranking-star"></i>
+                    <span>ตารางเปรียบเทียบสิทธิ์ 4 ระดับตำแหน่ง</span>
+                </button>
+                <button id="adminTabDept" onclick="switchAdminSummaryTab('dept')" class="px-4 py-2 rounded-xl text-xs font-medium text-slate-600 hover:text-indigo-600 transition flex items-center gap-2 whitespace-nowrap">
+                    <i class="fa-solid fa-sitemap"></i>
+                    <span>สรุปตามหน่วยงาน (Department)</span>
+                </button>
+                <button id="adminTabIndividual" onclick="switchAdminSummaryTab('individual')" class="px-4 py-2 rounded-xl text-xs font-medium text-slate-600 hover:text-indigo-600 transition flex items-center gap-2 whitespace-nowrap">
+                    <i class="fa-solid fa-id-card"></i>
+                    <span>สรุปรายพนักงาน (Individual Passport)</span>
+                </button>
+            </div>
+
+            <!-- ADMIN TAB 1: OVERVIEW & CHARTS (+ Master Rules + Employee Ledger) -->
+            <div id="adminViewOverview" class="space-y-6">
+                <!-- Analytics Dashboard Charts -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Donut Chart -->
+                    <div class="glass-card p-5 rounded-2xl border border-slate-200 flex flex-col justify-between">
+                        <div class="flex items-center justify-between mb-2">
+                            <h4 class="text-xs font-bold text-slate-800">สัดส่วนประเภทสวัสดิการ (15 รายการ)</h4>
+                            <span class="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded">ปี 2026</span>
+                        </div>
+                        <div class="h-44 flex items-center justify-center">
+                            <canvas id="welfarePieChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Monthly Expense Bar Chart -->
+                    <div class="glass-card p-5 rounded-2xl border border-slate-200 lg:col-span-2 flex flex-col justify-between">
+                        <div class="flex items-center justify-between mb-2">
+                            <h4 class="text-xs font-bold text-slate-800">สรุปการเบิกจ่ายสวัสดิการภาพรวมรายเดือน (บาท)</h4>
+                            <span class="text-[10px] bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded border border-emerald-200 font-semibold">งบประมาณใช้งานสะสม: 272,500 ฿</span>
+                        </div>
+                        <div class="h-44">
+                            <canvas id="monthlyBarChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Admin Table 1: Welfare Master Registry Rules -->
+                <div class="glass-card rounded-2xl p-6 border border-slate-200">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-5">
+                        <div>
+                            <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+                                <i class="fa-solid fa-sliders text-indigo-600"></i>
+                                <span>ตารางกำหนดรูปแบบและเพดานค่าใช้จ่าย (Welfare Master Rules)</span>
+                            </h3>
+                            <p class="text-xs text-slate-500">ข้อมูลกำหนดเพดานค่าใช้จ่าย และรายละเอียดเงื่อนไขสวัสดิการ</p>
+                        </div>
+                        <div class="relative w-full sm:w-64">
+                            <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                            <input type="text" id="adminMasterSearch" onkeyup="filterAdminMasterTable()" placeholder="ค้นหารายการสวัสดิการ..." class="w-full pl-9 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-800 focus:outline-none focus:border-indigo-500">
+                        </div>
+                    </div>
+
+                    <div class="overflow-x-auto custom-scrollbar">
+                        <table class="w-full text-left border-collapse text-xs" id="adminMasterTable">
+                            <thead>
+                                <tr class="border-b border-slate-200 text-slate-600 bg-slate-100/80">
+                                    <th class="p-3 font-semibold w-12 text-center">#</th>
+                                    <th class="p-3 font-semibold min-w-[200px]">สวัสดิการ</th>
+                                    <th class="p-3 font-semibold min-w-[360px]">รายละเอียด</th>
+                                    <th class="p-3 font-semibold min-w-[160px]">เพดานค่าใช้จ่ายรวม</th>
+                                    <th class="p-3 font-semibold text-center w-20">จัดการ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="adminMasterTableBody" class="divide-y divide-slate-200">
+                                <!-- JS Populates 15 Master Items -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Admin Table 2: Employee Welfare Records Ledger -->
+                <div class="glass-card rounded-2xl p-6 border border-slate-200">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-5">
+                        <div>
+                            <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+                                <i class="fa-solid fa-database text-purple-600"></i>
+                                <span>รายการบันทึกสวัสดิการพนักงานรายคน (Employee Welfare Records)</span>
+                            </h3>
+                            <p class="text-xs text-slate-500">ข้อมูลการใช้สิทธิ์สวัสดิการที่อัปโหลดอ้างอิงตามรหัสพนักงานเป็น Key หลัก</p>
+                        </div>
+
+                        <!-- Search & Dept Filter -->
+                        <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
+                            <select id="filterEmpDept" onchange="filterEmployeeLedger()" class="bg-white border border-slate-200 text-xs text-slate-700 rounded-xl px-3 py-2 focus:outline-none focus:border-indigo-500 shadow-xs">
+                                <option value="all">ทุกแผนก (All Depts)</option>
+                                <option value="Sales">ทีมขาย (Sales)</option>
+                                <option value="IT">เทคโนโลยีสารสนเทศ (IT)</option>
+                                <option value="HR">ทรัพยากรบุคคล (HR)</option>
+                                <option value="Finance">การเงิน (Finance)</option>
+                            </select>
+                            <div class="relative flex-1 md:w-64">
+                                <i class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                                <input type="text" id="adminLedgerSearch" onkeyup="filterEmployeeLedger()" placeholder="ค้นหาชื่อ / รหัสพนักงาน..." class="w-full pl-9 pr-3 py-2 bg-white border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:border-indigo-500 shadow-xs">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="overflow-x-auto custom-scrollbar">
+                        <table class="w-full text-left border-collapse text-xs">
+                            <thead>
+                                <tr class="border-b border-slate-200 text-slate-600 bg-slate-100/80">
+                                    <th class="p-3 font-semibold w-28">วันที่บันทึก</th>
+                                    <th class="p-3 font-semibold">รหัสพนักงาน / ชื่อ-นามสกุล</th>
+                                    <th class="p-3 font-semibold">ชื่อรายการสวัสดิการ</th>
+                                    <th class="p-3 font-semibold">รายละเอียด / บันทึกเพิ่มเติม</th>
+                                    <th class="p-3 font-semibold text-right">จำนวนเงิน (บาท)</th>
+                                    <th class="p-3 font-semibold text-center">สถานะ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="employeeLedgerTableBody" class="divide-y divide-slate-200">
+                                <!-- JS Populates Ledger Records -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ADMIN TAB 2: JOB LEVEL ENTITLEMENT MATRIX (MOVED FROM USER VIEW) -->
+            <div id="adminViewLevel" class="glass-card rounded-2xl p-6 border border-slate-200 hidden space-y-6">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-200 pb-4">
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+                            <i class="fa-solid fa-ranking-star text-purple-600"></i>
+                            <span>ตารางเปรียบเทียบสิทธิ์สวัสดิการ 4 ระดับตำแหน่ง (Job Position Levels Entitlement Matrix)</span>
+                        </h3>
+                        <p class="text-xs text-slate-500 mt-0.5">ตารางเปรียบเทียบวงเงิน เพดานค่าใช้จ่าย และเงื่อนไขสิทธิ์ทุกระดับตำแหน่งสำหรับ HR ใช้จัดการ</p>
+                    </div>
+                    <span class="px-3 py-1 bg-purple-50 border border-purple-100 text-purple-700 rounded-full text-xs font-semibold">4 ระดับตำแหน่ง</span>
+                </div>
+
+                <div class="overflow-x-auto custom-scrollbar bg-white rounded-xl border border-slate-200">
+                    <table class="w-full text-left border-collapse text-xs">
+                        <thead>
+                            <tr class="border-b border-slate-200 bg-slate-50 text-slate-700">
+                                <th class="py-3.5 px-3 font-semibold text-center w-10">#</th>
+                                <th class="py-3.5 px-4 font-bold text-slate-900 min-w-[200px]">รายการสวัสดิการ</th>
+                                <th class="py-3.5 px-3 text-center min-w-[130px]">
+                                    <span class="px-2.5 py-1 bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-full text-[11px] font-semibold inline-block">พนักงานทั่วไป</span>
+                                </th>
+                                <th class="py-3.5 px-3 text-center min-w-[130px]">
+                                    <span class="px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full text-[11px] font-semibold inline-block">หัวหน้างาน</span>
+                                </th>
+                                <th class="py-3.5 px-3 text-center min-w-[130px]">
+                                    <span class="px-2.5 py-1 bg-amber-50 text-amber-800 border border-amber-200 rounded-full text-[11px] font-semibold inline-block">ผู้จัดการ</span>
+                                </th>
+                                <th class="py-3.5 px-3 text-center min-w-[130px]">
+                                    <span class="px-2.5 py-1 bg-purple-50 text-purple-700 border border-purple-200 rounded-full text-[11px] font-semibold inline-block">ผู้บริหาร</span>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin4LevelTableBody" class="divide-y divide-slate-100 font-medium text-slate-700">
+                            <!-- JS Populates 15 Rows with 4 Levels -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Level Overview Cards Summary -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 pt-4 border-t border-slate-200" id="levelCardsContainer">
+                    <!-- JS Populates Position Level Summary Cards -->
+                </div>
+            </div>
+
+            <!-- ADMIN TAB 3: DEPARTMENT SUMMARY -->
+            <div id="adminViewDept" class="glass-card rounded-2xl p-6 border border-slate-200 hidden space-y-6">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-200 pb-4">
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+                            <i class="fa-solid fa-sitemap text-indigo-600"></i>
+                            <span>สรุปสถิติการใช้งานสวัสดิการจำแนกตามหน่วยงาน / แผนก</span>
+                        </h3>
+                        <p class="text-xs text-slate-500 mt-0.5">เปรียบเทียบวงเงินจัดสรร ยอดเบิกจ่ายจริง และอัตราการใช้งานสวัสดิการแต่ละแผนก</p>
+                    </div>
+                    <span class="px-3 py-1 bg-indigo-50 border border-indigo-100 text-indigo-700 rounded-full text-xs font-medium">รวม 5 หน่วยงานหลัก</span>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="deptCardsContainer">
+                    <!-- JS Populates Department Cards -->
+                </div>
+            </div>
+
+            <!-- ADMIN TAB 4: INDIVIDUAL PASSPORT -->
+            <div id="adminViewIndividual" class="glass-card rounded-2xl p-6 border border-slate-200 hidden space-y-6">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-200 pb-4">
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+                            <i class="fa-solid fa-id-card text-emerald-600"></i>
+                            <span>สรุปสิทธิ์และประวัติสวัสดิการรายพนักงาน (Employee Welfare Passport)</span>
+                        </h3>
+                        <p class="text-xs text-slate-500 mt-0.5">เลือกรหัสหรือชื่อพนักงานเพื่อดึงข้อมูลสรุปการใช้สิทธิ์และวงเงินคงเหลือฉบับสมบูรณ์</p>
+                    </div>
+
+                    <!-- Employee Selector Dropdown -->
+                    <div class="flex items-center gap-2 w-full md:w-80">
+                        <i class="fa-solid fa-user-tag text-slate-400 text-xs"></i>
+                        <select id="individualEmpSelect" onchange="renderIndividualEmployeePassport(this.value)" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-semibold text-slate-800 focus:outline-none focus:border-indigo-500 shadow-xs">
+                            <!-- JS Populates Employee Dropdown -->
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Individual Passport Box -->
+                <div id="employeePassportDetail">
+                    <!-- Dynamic Passport Content -->
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- ================= MODALS & DIALOGS ================= -->
+    
+    <!-- Excel Template Upload Modal Dialog -->
+    <div id="templateUploadModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white border border-slate-200 rounded-2xl w-full max-w-xl overflow-hidden shadow-2xl transition-all">
+            <div class="px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-slate-50">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold">
+                        <i class="fa-solid fa-file-excel"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-900">อัปโหลดข้อมูลสวัสดิการผ่าน Excel / CSV Template</h3>
+                        <p class="text-[11px] text-slate-500">อ้างอิงข้อมูลสวัสดิการโดยใช้ <span class="font-semibold text-indigo-600">"รหัสพนักงาน (Employee ID)"</span> เป็น Key หลัก</p>
+                    </div>
+                </div>
+                <button onclick="closeTemplateUploadModal()" class="text-slate-400 hover:text-slate-700 text-lg"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <div class="p-6 space-y-4">
+                <div class="space-y-1">
+                    <label class="text-xs font-semibold text-slate-700">เลือกหมวดหมู่สวัสดิการที่ต้องการนำเข้า:</label>
+                    <select id="uploadCategorySelect" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-medium text-slate-800 focus:outline-none focus:border-indigo-500">
+                        <option value="all">ทุกรายการสวัสดิการ (Batch Update)</option>
+                    </select>
+                </div>
+
+                <div class="p-3 bg-indigo-50/60 rounded-xl border border-indigo-100 flex items-center justify-between text-xs">
+                    <div class="flex items-center gap-2 text-indigo-900">
+                        <i class="fa-solid fa-circle-info text-indigo-600"></i>
+                        <span>ยังไม่มีไฟล์ Template? ดาวน์โหลดตัวอย่างโครงสร้างไฟล์</span>
+                    </div>
+                    <button onclick="downloadSampleTemplate()" class="px-3 py-1.5 bg-white border border-indigo-200 hover:bg-indigo-50 text-indigo-700 font-semibold rounded-lg text-[11px] transition">
+                        <i class="fa-solid fa-download mr-1"></i> โหลด Template
+                    </button>
+                </div>
+
+                <div class="border-2 border-dashed border-slate-300 hover:border-indigo-500 rounded-2xl p-6 text-center transition bg-slate-50/50 cursor-pointer" onclick="document.getElementById('excelFileInput').click()">
+                    <input type="file" id="excelFileInput" accept=".xlsx, .xls, .csv" class="hidden" onchange="handleFileSelect(this)">
+                    <div class="w-12 h-12 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center mx-auto mb-2 text-xl">
+                        <i class="fa-solid fa-cloud-arrow-up"></i>
+                    </div>
+                    <div class="text-xs font-bold text-slate-800">คลิกเพื่อเลือกไฟล์ หรือลากไฟล์มาวางที่นี่</div>
+                    <div class="text-[10px] text-slate-400 mt-1">รองรับไฟล์ Excel (.xlsx, .xls) หรือ CSV</div>
+                </div>
+
+                <div id="previewSection" class="hidden space-y-2">
+                    <div class="flex items-center justify-between text-xs">
+                        <span class="font-bold text-slate-800">พรีวิวข้อมูลที่จะนำเข้า (<span id="previewCount">0</span> รายการ):</span>
+                        <span class="text-emerald-600 font-medium"><i class="fa-solid fa-circle-check"></i> ตรวจสอบรูปแบบเรียบร้อย</span>
+                    </div>
+                    <div class="max-h-36 overflow-y-auto border border-slate-200 rounded-xl custom-scrollbar">
+                        <table class="w-full text-left text-[11px]">
+                            <thead class="bg-slate-100 sticky top-0 text-slate-600">
+                                <tr>
+                                    <th class="p-2">Employee ID</th>
+                                    <th class="p-2">รายการสวัสดิการ</th>
+                                    <th class="p-2">จำนวนเงิน</th>
+                                    <th class="p-2">หมายเหตุ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="previewTableBody" class="divide-y divide-slate-100 bg-white">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="px-6 py-3.5 bg-slate-50 border-t border-slate-200 flex justify-end gap-2">
+                <button onclick="closeTemplateUploadModal()" class="px-4 py-2 border border-slate-300 hover:bg-slate-100 text-slate-700 rounded-xl text-xs font-medium transition">ยกเลิก</button>
+                <button id="btnConfirmImport" onclick="executeBatchImport()" disabled class="px-5 py-2 bg-slate-300 text-slate-500 rounded-xl text-xs font-semibold cursor-not-allowed transition">ยืนยันนำเข้าข้อมูล</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Welfare Detail Popup Modal for User View -->
+    <div id="welfareDetailModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden transition-all duration-300">
+        <div class="bg-white border border-slate-200 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl transform transition-all">
+            <!-- Modal Header -->
+            <div class="px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-gradient-to-r from-slate-50 to-indigo-50/50">
+                <div class="flex items-center gap-3">
+                    <div id="modalWelfareIconBox" class="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center text-lg font-bold shadow-md shadow-indigo-200">
+                        <i id="modalWelfareIcon" class="fa-solid fa-shield-heart"></i>
+                    </div>
+                    <div>
+                        <h3 id="modalWelfareTitle" class="text-base font-bold text-slate-900">รายละเอียดสวัสดิการ</h3>
+                        <div id="modalWelfareCap" class="text-xs text-indigo-600 font-medium">เพดานสิทธิ์ของคุณ: -</div>
+                    </div>
+                </div>
+                <button onclick="closeWelfareDetailModal()" class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 text-base flex items-center justify-center transition">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- Modal Body Content -->
+            <div class="p-6 space-y-5 max-h-[75vh] overflow-y-auto custom-scrollbar">
+                <!-- Status & Gauge Overview -->
+                <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-semibold text-slate-600">สถานะสิทธิ์ของคุณ:</span>
+                        <div id="modalWelfareStatusBadge">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+
+                    <div id="modalProgressSection" class="hidden pt-2 border-t border-slate-200/80 space-y-1.5">
+                        <div class="flex justify-between text-xs">
+                            <span class="text-slate-500">การใช้สิทธิ์คงเหลือ:</span>
+                            <span id="modalRemainingText" class="font-bold text-emerald-600">0 / 0 ฿</span>
+                        </div>
+                        <div class="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
+                            <div id="modalProgressBar" class="bg-indigo-600 h-2 rounded-full" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Terms & Conditions Box -->
+                <div class="space-y-2">
+                    <h4 class="text-xs font-bold text-slate-900 flex items-center gap-1.5 text-indigo-600">
+                        <i class="fa-solid fa-file-contract"></i>
+                        <span>รายละเอียด / เอกสารและเงื่อนไขการรับสิทธิ์:</span>
+                    </h4>
+                    <div id="modalWelfareDetailText" class="bg-slate-50 p-4 rounded-xl border border-slate-200 text-xs text-slate-700 leading-relaxed whitespace-pre-line font-normal">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+
+                <!-- Personal History Records (Vertical List - Latest First) -->
+                <div class="space-y-2">
+                    <div class="flex items-center justify-between">
+                        <h4 class="text-xs font-bold text-slate-900 flex items-center gap-1.5 text-purple-600">
+                            <i class="fa-solid fa-clock-rotate-left"></i>
+                            <span>ประวัติรายการที่บันทึก (เรียงจากล่าสุด):</span>
+                        </h4>
+                        <span id="modalRecordCountBadge" class="text-[10px] font-semibold bg-purple-100 text-purple-700 border border-purple-200 px-2.5 py-0.5 rounded-full">0 รายการ</span>
+                    </div>
+
+                    <!-- Vertical List Container -->
+                    <div id="modalHistoryListContainer" class="space-y-2.5 max-h-56 overflow-y-auto custom-scrollbar pr-1">
+                        <!-- Populated dynamically via JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="px-6 py-3.5 bg-slate-50 border-t border-slate-200 flex justify-end">
+                <button onclick="closeWelfareDetailModal()" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold shadow-xs transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-check"></i>
+                    <span>รับทราบ / ปิดหน้าต่าง</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating Toast Notification Element -->
+    <div id="toastNotification" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none">
+        <div class="bg-slate-900 text-white px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3 border border-slate-700">
+            <i id="toastIcon" class="fa-solid fa-circle-check text-emerald-400 text-lg"></i>
+            <span id="toastMessage" class="text-xs font-medium">บันทึกข้อมูลเรียบร้อยแล้ว</span>
+        </div>
+    </div>
+
+    <!-- ================= JAVASCRIPT LOGIC ================= -->
+    <script>
+        // 4-Level Specific Limits Mapping (15 Welfare Items)
+        const levelLimitsMap = {
+            1: { staff: "มีสิทธิ์ใช้", supervisor: "มีสิทธิ์ใช้", manager: "มีสิทธิ์ใช้", executive: "มีสิทธิ์ใช้" },
+            2: { staff: "ตามกรมธรรม์", supervisor: "ตามกรมธรรม์", manager: "ตามกรมธรรม์", executive: "ตามกรมธรรม์" },
+            3: { staff: "2 ชุด/ปี", supervisor: "2 ชุด/ปี", manager: "—", executive: "—" },
+            4: { staff: "เฉพาะคน", supervisor: "เฉพาะคน", manager: "เฉพาะคน", executive: "เฉพาะคน" },
+            5: { staff: "15,000 บาท/ปี", supervisor: "18,000 บาท/ปี", manager: "20,000 บาท/ปี", executive: "25,000 บาท/ปี", staffVal: 15000, supVal: 18000, mgrVal: 20000, execVal: 25000 },
+            6: { staff: "แผน 1 (300,000)", supervisor: "แผน 2 (500,000)", manager: "แผน 3 (800,000)", executive: "แผน VIP (1.5M)" },
+            7: { staff: "1 ครั้ง/ปี", supervisor: "1 ครั้ง/ปี", manager: "1 ครั้ง/ปี", executive: "1 ครั้ง/ปี (แพ็กเกจพิเศษ)" },
+            8: { staff: "ตามความเสียหาย", supervisor: "ตามความเสียหาย", manager: "ตามความเสียหาย", executive: "ตามความเสียหาย" },
+            9: { staff: "1,000 บาท/ครั้ง", supervisor: "1,000 บาท/ครั้ง", manager: "2,000 บาท/ครั้ง", executive: "2,000 บาท/ครั้ง" },
+            10: { staff: "5,500 บาท/ครั้ง", supervisor: "5,500 บาท/ครั้ง", manager: "10,000 บาท/ครั้ง", executive: "15,000 บาท/ครั้ง" },
+            11: { staff: "6,000 บาท/ปี", supervisor: "10,000 บาท/ปี", manager: "20,000 บาท/ปี", executive: "30,000 บาท/ปี", staffVal: 6000, supVal: 10000, mgrVal: 20000, execVal: 30000 },
+            12: { staff: "2,000 บาท/ครั้ง", supervisor: "2,000 บาท/ครั้ง", manager: "3,000 บาท/ครั้ง", executive: "5,000 บาท/ครั้ง" },
+            13: { staff: "ตามอายุงาน", supervisor: "ตามอายุงาน", manager: "ตามอายุงาน", executive: "ตามอายุงาน" },
+            14: { staff: "มีสิทธิ์ใช้", supervisor: "มีสิทธิ์ใช้", manager: "มีสิทธิ์ใช้", executive: "มีสิทธิ์ใช้" },
+            15: { staff: "5,000 บาท/บุตร/ปี", supervisor: "8,000 บาท/บุตร/ปี", manager: "12,000 บาท/บุตร/ปี", executive: "20,000 บาท/บุตร/ปี" }
+        };
+
+        // Full Master Welfare Dataset (15 Items matching image_bf8790.png)
+        const welfareMasterData = [
+            { id: 1, title: "ตรวจสุขภาพก่อนเริ่มงาน", detail: "สวัสดิการตรวจสุขภาพร่างกายเบื้องต้นก่อนเข้าเริ่มงานตามสถานพยาบาลที่บริษัทกำหนด", cap: "มีสิทธิ์ใช้ (ทุกคน)", type: "eligible", icon: "fa-user-nurse" },
+            { id: 2, title: "ประกันอุบัติเหตุ", detail: "ความคุ้มครองประกันภัยอุบัติเหตุกลุ่มสำหรับพนักงานประจำตลอดปี", cap: "ตามกรมธรรม์", type: "hr_record", icon: "fa-kit-medical" },
+            { id: 3, title: "เครื่องแบบพนักงาน", detail: "สวัสดิการชุดเครื่องแบบยูนิฟอร์มประจำปี สำหรับสายงานสนับสนุนและสำนักงาน", cap: "2 ชุด/ปี", type: "hr_record", icon: "fa-shirt" },
+            { id: 4, title: "ประกันภัยชายแดนใต้", detail: "ความคุ้มครองประกันภัยพิเศษเพิ่มเติมสำหรับพนักงานที่ปฏิบัติภารกิจในพื้นที่ชายแดนใต้", cap: "เฉพาะคน", type: "hr_record", icon: "fa-shield-halved" },
+            { id: 5, title: "ประกันภัยรถยนต์", detail: "1. พนักงานประจำที่ผ่านทดลองงานแล้ว\n2. พนักงานทีมขาย และพนักงานที่ได้รับสิทธิ์เท่านั้น\nเอกสารประกอบการทำประกันรถ:\n- สำเนาน่ารถ 1 ใบ\n- สำเนาใบขับขี่ 1 ใบ (ของพนวน.)\n- สำเนาใบขับขี่ 1 ใบ (ของบุคคลที่ 2 ถ้ามี)\nส่งข้อมูลก่อนประกันเก่าหมด 5-7 วันทำการ ได้ที่ jeeraroj.sa@rx.co.th ถึง เอ็ม HR\n***ประกันภัยชั้น 1 (แบบระบุผู้ขับขี่)***", cap: "15,000 บาท/ปี", capValue: 15000, type: "hr_record", icon: "fa-car" },
+            { id: 6, title: "ประกันสุขภาพ", detail: "ความคุ้มครองประกันสุขภาพกลุ่มสำหรับพนักงานประจำตามระดับตำแหน่งงาน", cap: "แผน 1 (300,000 บาท)", type: "hr_record", icon: "fa-notes-medical" },
+            { id: 7, title: "ตรวจสุขภาพประจำปี", detail: "สวัสดิการตรวจสุขภาพประจำปีสำหรับพนักงานประจำทุกคน (ปีละ 1 ครั้ง)", cap: "1 ครั้ง/ปี", type: "eligible", icon: "fa-stethoscope" },
+            { id: 8, title: "บ้านประสบภัยพิบัติ", detail: "เงินช่วยเหลือฉุกเฉินกรณีที่อยู่อาศัยของพนักงานได้รับความเสียหายจากภัยธรรมชาติ", cap: "ตามความเสียหาย", type: "hr_record", icon: "fa-house-chimney-crack" },
+            { id: 9, title: "เยี่ยมพนักงานเจ็บป่วย", detail: "บริษัทฯ จัดของเยี่ยมให้กับพนักงานในกรณีที่เจ็บป่วย นอนรักษาตัวในโรงพยาบาล มูลค่า 1,000 บาท", cap: "1,000 บาท/ครั้ง", capValue: 1000, type: "hr_record", icon: "fa-hospital-user" },
+            { id: 10, title: "เงินช่วยค่าจัดงานศพ", detail: "1. บริษัทมอบเงินช่วยเหลือ 4,000 บาท\n2. พวงหรีด 1 พวง มูลค่า 1,500 บาท", cap: "5,500 บาท/ครั้ง", capValue: 5500, type: "hr_record", icon: "fa-ribbon" },
+            { id: 11, title: "OPD", detail: "สวัสดิการค่ารักษาพยาบาลผู้ป่วยนอก (OPD) ตามวงเงินสิทธิ์และใบเสร็จรับเงินจริง", cap: "6,000 บาท/ปี", capValue: 6000, type: "hr_record", icon: "fa-file-invoice-dollar" },
+            { id: 12, title: "ช่วยงานแต่ง", detail: "บริษัทฯ ให้สวัสดิการเงินช่วย/ของขวัญงานแต่งงานของพนักงาน มูลค่า 2,000 บาท", cap: "2,000 บาท/ครั้ง", capValue: 2000, type: "hr_record", icon: "fa-glass-cheers" },
+            { id: 13, title: "รางวัลอายุงาน", detail: "รางวัลเกียรติยศและเงินขวัญถุงตามอายุการทำงานสะสมกับบริษัท (5 ปี, 10 ปี, 15 ปี)", cap: "ตามอายุงาน", type: "hr_record", icon: "fa-award" },
+            { id: 14, title: "งานเลี้ยงปีใหม่", detail: "เข้าร่วมกิจกรรมสังสรรค์ ลุ้นรางวัลใหญ่ และรับของขวัญปีใหม่ประจำปีของบริษัท", cap: "มีสิทธิ์ใช้ (ทุกคน)", type: "eligible", icon: "fa-champagne-glasses" },
+            { id: 15, title: "ทุนการศึกษาบุตร", detail: "เงินช่วยเหลือทุนการศึกษาสำหรับบุตรพนักงานประจำที่มีผลการเรียนตามเกณฑ์บริษัท", cap: "5,000 บาท/บุตร/ปี", type: "hr_record", icon: "fa-graduation-cap" }
+        ];
+
+        // Sample Personal Employee Records Data
+        const employeeWelfarePersonal = {
+            5: [
+                { date: "05 ม.ค. 2026", title: "ประกันภัยรถยนต์", amount: 12500, note: "อนุมัติกรมธรรม์ประกันภัยรถยนต์ชั้น 1 (เบี้ย 12,500 บาท) วิริยะประกันภัย" }
+            ],
+            9: [
+                { date: "12 มี.ค. 2026", title: "เยี่ยมพนักงานเจ็บป่วย", amount: 1000, note: "มอบกระเช้าเยี่ยมไข้โรงพยาบาลพญาไท 1" }
+            ],
+            11: [
+                { date: "15 พ.ค. 2026", title: "OPD", amount: 1500, note: "เบิกค่ารักษาพยาบาล OPD ตรวจรักษาอาการไข้หวัดใหญ่ รพ.กรุงเทพ" },
+                { date: "02 เม.ย. 2026", title: "OPD", amount: 1200, note: "เบิกค่ารักษาพยาบาล OPD คลินิกทันตกรรม" }
+            ]
+        };
+
+        // Sample Admin Ledger Dataset
+        const sampleLedgerRecords = [
+            { date: "15 พ.ค. 2026", empId: "EMP001", empName: "จีระโรจน์ ศิริอุดมสุข", dept: "Sales", title: "OPD", note: "เบิกค่ารักษาพยาบาล OPD ไข้หวัดใหญ่", amount: 1500, status: "อนุมัติแล้ว" },
+            { date: "02 เม.ย. 2026", empId: "EMP001", empName: "จีระโรจน์ ศิริอุดมสุข", dept: "Sales", title: "OPD", note: "เบิกค่ารักษาพยาบาล OPD คลินิกทันตกรรม", amount: 1200, status: "อนุมัติแล้ว" },
+            { date: "12 มี.ค. 2026", empId: "EMP001", empName: "จีระโรจน์ ศิริอุดมสุข", dept: "Sales", title: "เยี่ยมพนักงานเจ็บป่วย", note: "กระเช้าเยี่ยมไข้ รพ.พญาไท 1", amount: 1000, status: "อนุมัติแล้ว" },
+            { date: "05 ม.ค. 2026", empId: "EMP001", empName: "จีระโรจน์ ศิริอุดมสุข", dept: "Sales", title: "ประกันภัยรถยนต์", note: "อนุมัติประกันภัยรถยนต์ชั้น 1", amount: 12500, status: "อนุมัติแล้ว" },
+            { date: "10 ก.พ. 2026", empId: "EMP002", empName: "กมลวรรณ สุขเสริฐ", dept: "IT", title: "เครื่องแบบพนักงาน", note: "แจกชุดยูนิฟอร์มประจำปี 2 ชุด", amount: 2500, status: "อนุมัติแล้ว" },
+            { date: "18 เม.ย. 2026", empId: "EMP003", empName: "ศุภชัย วิเศษกุล", dept: "HR", title: "ช่วยงานแต่ง", note: "เงินมงคลสมรสพนักงานประจำ", amount: 2000, status: "อนุมัติแล้ว" },
+            { date: "22 พ.ค. 2026", empId: "EMP004", empName: "ณิชารีย์ พลอยดี", dept: "Finance", title: "เงินช่วยค่าจัดงานศพ", note: "เงินช่วยเหลือ 4,000 + พวงหรีด 1,500 บาท", amount: 5500, status: "อนุมัติแล้ว" }
+        ];
+
+        // Sample Employees List for Passport
+        const sampleEmployeesList = [
+            { id: "EMP001", name: "จีระโรจน์ ศิริอุดมสุข", role: "Senior Sales Executive", dept: "Sales", joined: "12 ม.ค. 2021" },
+            { id: "EMP002", name: "กมลวรรณ สุขเสริฐ", role: "Full Stack Developer", dept: "IT", joined: "01 มิ.ย. 2022" },
+            { id: "EMP003", name: "ศุภชัย วิเศษกุล", role: "HR Specialist", dept: "HR", joined: "15 มี.ค. 2019" },
+            { id: "EMP004", name: "ณิชารีย์ พลอยดี", role: "Accountant", dept: "Finance", joined: "01 ก.ย. 2023" }
+        ];
+
+        // Helper: Get Personal Welfare History
+        function getWelfareHistory(welfareId) {
+            const raw = employeeWelfarePersonal[welfareId];
+            if (!raw) return { total: 0, records: [] };
+            if (Array.isArray(raw)) {
+                const total = raw.reduce((sum, r) => sum + (r.amount || 0), 0);
+                return { total, records: raw };
+            }
+            const amt = raw.usedValue || raw.amount || 0;
+            return { total: amt, records: [{ date: raw.date || '-', title: raw.title || '-', amount: amt, note: raw.note || '' }] };
+        }
+
+        // Render Individual Employee Table for User View (Staff Level)
+        function renderUserUnifiedTable(filter = 'all', searchQuery = '') {
+            const container = document.getElementById('userUnifiedTableBody');
+            if (!container) return;
+            container.innerHTML = '';
+
+            const filtered = welfareMasterData.filter(item => {
+                const matchesFilter = (filter === 'all') || 
+                                      (filter === 'eligible' && item.type === 'eligible') || 
+                                      (filter === 'hr_record' && item.type === 'hr_record');
+                const matchesSearch = item.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                                      item.detail.toLowerCase().includes(searchQuery.toLowerCase());
+                return matchesFilter && matchesSearch;
+            });
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <tr>
+                        <td colspan="4" class="p-8 text-center text-slate-500 text-xs">
+                            <i class="fa-solid fa-folder-open text-3xl mb-2 text-slate-300"></i>
+                            <p>ไม่พบรายการสวัสดิการที่ตรงกับคำค้นหา</p>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            filtered.forEach((item, index) => {
+                const history = getWelfareHistory(item.id);
+                const staffCapStr = levelLimitsMap[item.id] ? levelLimitsMap[item.id].staff : item.cap;
+
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-indigo-50/40 cursor-pointer transition border-b border-slate-100 last:border-0 group";
+                tr.onclick = function() { openWelfareDetailModal(item.id); };
+
+                // Status Badge HTML - Default to "มีสิทธิ์ใช้" unless recorded
+                let statusBadgeHTML = '';
+                const used = history.total;
+                if (used > 0) {
+                    statusBadgeHTML = `<span class="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-indigo-100 text-indigo-700 border border-indigo-200 inline-flex items-center justify-center gap-1"><i class="fa-solid fa-receipt text-xs"></i> บันทึกแล้ว ${used.toLocaleString()} ฿</span>`;
+                } else {
+                    statusBadgeHTML = `<span class="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-100 text-emerald-700 border border-emerald-200 inline-flex items-center justify-center gap-1.5"><i class="fa-solid fa-circle-check text-xs"></i> มีสิทธิ์ใช้</span>`;
+                }
+
+                tr.innerHTML = `
+                    <td class="py-3.5 px-3 text-center font-mono font-semibold text-slate-400 text-xs">${index + 1}</td>
+                    
+                    <td class="py-3.5 px-4 font-bold text-slate-900 group-hover:text-indigo-600 transition">
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-7 h-7 rounded-lg bg-indigo-50 border border-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-xs shrink-0 group-hover:bg-indigo-600 group-hover:text-white transition">
+                                <i class="fa-solid ${item.icon}"></i>
+                            </div>
+                            <span>${item.title}</span>
+                        </div>
+                    </td>
+
+                    <td class="py-3.5 px-4 font-semibold text-slate-800">${staffCapStr}</td>
+
+                    <td class="py-3.5 px-4 text-center bg-slate-50/50">
+                        <div class="flex items-center justify-center gap-2">
+                            ${statusBadgeHTML}
+                            <i class="fa-solid fa-chevron-right text-slate-300 group-hover:text-indigo-600 group-hover:translate-x-0.5 transition text-xs"></i>
+                        </div>
+                    </td>
+                `;
+                container.appendChild(tr);
+            });
+        }
+
+        // Render Admin 4-Level Matrix Table
+        function renderAdmin4LevelMatrix() {
+            const container = document.getElementById('admin4LevelTableBody');
+            if (!container) return;
+            container.innerHTML = '';
+
+            welfareMasterData.forEach((item, index) => {
+                const limits = levelLimitsMap[item.id] || { staff: item.cap, supervisor: item.cap, manager: item.cap, executive: item.cap };
+
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-purple-50/30 transition border-b border-slate-100 last:border-0";
+
+                tr.innerHTML = `
+                    <td class="py-3.5 px-3 text-center font-mono font-semibold text-slate-400 text-xs">${index + 1}</td>
+                    <td class="py-3.5 px-4 font-bold text-slate-900">
+                        <div class="flex items-center gap-2">
+                            <i class="fa-solid ${item.icon} text-purple-600 w-4 text-center"></i>
+                            <span>${item.title}</span>
+                        </div>
+                    </td>
+                    <td class="py-3.5 px-3 text-center font-semibold text-slate-700 bg-indigo-50/30">${limits.staff}</td>
+                    <td class="py-3.5 px-3 text-center font-semibold text-slate-700 bg-emerald-50/30">${limits.supervisor}</td>
+                    <td class="py-3.5 px-3 text-center font-semibold text-slate-700 bg-amber-50/30">${limits.manager}</td>
+                    <td class="py-3.5 px-3 text-center font-semibold text-slate-700 bg-purple-50/30">${limits.executive}</td>
+                `;
+                container.appendChild(tr);
+            });
+        }
+
+        // Open Welfare Detail Pop-up Modal
+        function openWelfareDetailModal(id) {
+            const item = welfareMasterData.find(w => w.id === id);
+            if (!item) return;
+
+            const history = getWelfareHistory(id);
+            const staffCapStr = levelLimitsMap[item.id] ? levelLimitsMap[item.id].staff : item.cap;
+
+            // Set Header Fields
+            const iconEl = document.getElementById('modalWelfareIcon');
+            if (iconEl) iconEl.className = `fa-solid ${item.icon}`;
+
+            const titleEl = document.getElementById('modalWelfareTitle');
+            if (titleEl) titleEl.textContent = item.title;
+
+            const capEl = document.getElementById('modalWelfareCap');
+            if (capEl) capEl.textContent = `เพดานสิทธิ์ของคุณ (พนักงานทั่วไป): ${staffCapStr}`;
+
+            const detailEl = document.getElementById('modalWelfareDetailText');
+            if (detailEl) detailEl.textContent = item.detail || 'ไม่มีข้อมูลเงื่อนไขเพิ่มเติม';
+
+            // Status Badge & Gauge Section
+            const statusBox = document.getElementById('modalWelfareStatusBadge');
+            const progressSection = document.getElementById('modalProgressSection');
+
+            if (statusBox) {
+                const used = history.total;
+                if (used > 0) {
+                    statusBox.innerHTML = `<span class="px-3 py-1 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-700 border border-indigo-200 inline-flex items-center gap-1.5"><i class="fa-solid fa-receipt"></i> บันทึกแล้วรวม ${used.toLocaleString()} บาท</span>`;
+                } else {
+                    statusBox.innerHTML = `<span class="px-3 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700 border border-emerald-200 inline-flex items-center gap-1.5"><i class="fa-solid fa-circle-check"></i> มีสิทธิ์ใช้สวัสดิการ</span>`;
+                }
+
+                if (item.capValue && progressSection) {
+                    progressSection.classList.remove('hidden');
+                    const remaining = Math.max(0, item.capValue - used);
+                    const pct = Math.min(100, Math.round((used / item.capValue) * 100));
+                    
+                    const remText = document.getElementById('modalRemainingText');
+                    if (remText) remText.textContent = `${remaining.toLocaleString()} / ${item.capValue.toLocaleString()} ฿ (ใช้ไป ${pct}%)`;
+
+                    const progBar = document.getElementById('modalProgressBar');
+                    if (progBar) progBar.style.width = `${pct}%`;
+                } else if (progressSection) {
+                    progressSection.classList.add('hidden');
+                }
+            }
+
+            // Populate History Records List (Vertical Stacked List - Latest First)
+            const historyContainer = document.getElementById('modalHistoryListContainer');
+            const countBadge = document.getElementById('modalRecordCountBadge');
+
+            if (countBadge) {
+                countBadge.textContent = `${history.records.length} รายการ`;
+            }
+
+            if (historyContainer) {
+                historyContainer.innerHTML = '';
+
+                if (history.records.length === 0) {
+                    historyContainer.innerHTML = `
+                        <div class="p-4 text-center text-xs text-slate-400 bg-slate-50 border border-dashed border-slate-200 rounded-xl">
+                            <i class="fa-solid fa-clock-rotate-left text-lg text-slate-300 mb-1"></i>
+                            <div>ยังไม่มีประวัติการบันทึกสวัสดิการรายการนี้</div>
+                        </div>
+                    `;
+                } else {
+                    // Render History Rows Vertically
+                    history.records.forEach((rec, idx) => {
+                        const recCard = document.createElement('div');
+                        recCard.className = "p-3.5 bg-slate-50 hover:bg-indigo-50/30 border border-slate-200 rounded-xl space-y-2 transition";
+                        
+                        recCard.innerHTML = `
+                            <div class="flex items-center justify-between text-xs">
+                                <div class="flex items-center gap-2">
+                                    <span class="w-5 h-5 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-[10px] font-bold font-mono">${idx + 1}</span>
+                                    <span class="font-mono text-slate-500 text-[11px] flex items-center gap-1">
+                                        <i class="fa-regular fa-calendar-alt text-slate-400"></i> ${rec.date || '-'}
+                                    </span>
+                                </div>
+                                <div class="font-bold text-emerald-600 text-xs">
+                                    ${rec.amount ? rec.amount.toLocaleString() + ' ฿' : '-'}
+                                </div>
+                            </div>
+
+                            <div class="flex items-center justify-between text-xs pt-1 border-t border-slate-200/60">
+                                <span class="font-semibold text-slate-800">${rec.title || item.title}</span>
+                                <span class="text-[10px] text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md font-medium"><i class="fa-solid fa-check mr-1"></i>บันทึกแล้ว</span>
+                            </div>
+
+                            ${rec.note ? `
+                                <div class="text-[11px] text-slate-600 bg-white p-2.5 rounded-lg border border-slate-200/80 leading-relaxed">
+                                    <span class="font-semibold text-slate-700">หมายเหตุจาก HR:</span> ${rec.note}
+                                </div>
+                            ` : ''}
+                        `;
+                        historyContainer.appendChild(recCard);
+                    });
+                }
+            }
+
+            // Show Modal
+            const modal = document.getElementById('welfareDetailModal');
+            if (modal) modal.classList.remove('hidden');
+        }
+
+        function closeWelfareDetailModal() {
+            const modal = document.getElementById('welfareDetailModal');
+            if (modal) modal.classList.add('hidden');
+        }
+
+        // Filter User List Buttons
+        function filterUserList(type) {
+            ['tabUserAll', 'tabUserStatus', 'tabUserExpense'].forEach(t => {
+                const btn = document.getElementById(t);
+                if (btn) {
+                    btn.className = "px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:text-indigo-600 transition";
+                }
+            });
+
+            if (type === 'all') {
+                const btn = document.getElementById('tabUserAll');
+                if (btn) btn.className = "px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 text-white shadow-xs transition";
+            } else if (type === 'eligible') {
+                const btn = document.getElementById('tabUserStatus');
+                if (btn) btn.className = "px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 text-white shadow-xs transition";
+            } else if (type === 'hr_record') {
+                const btn = document.getElementById('tabUserExpense');
+                if (btn) btn.className = "px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 text-white shadow-xs transition";
+            }
+
+            const searchVal = document.getElementById('userSearchInput')?.value || '';
+            renderUserUnifiedTable(type, searchVal);
+        }
+
+        function searchUserList() {
+            const searchVal = document.getElementById('userSearchInput')?.value || '';
+            renderUserUnifiedTable('all', searchVal);
+        }
+
+        // Render Admin Master Rules Table
+        function renderAdminMasterTable(searchQuery = '') {
+            const body = document.getElementById('adminMasterTableBody');
+            if (!body) return;
+            body.innerHTML = '';
+
+            const filtered = welfareMasterData.filter(item => 
+                item.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                item.detail.toLowerCase().includes(searchQuery.toLowerCase())
+            );
+
+            filtered.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50 transition";
+
+                tr.innerHTML = `
+                    <td class="p-3 text-center font-mono text-slate-400">${item.id}</td>
+                    <td class="p-3 font-bold text-slate-800 flex items-center gap-2">
+                        <i class="fa-solid ${item.icon} text-indigo-600 w-4 text-center"></i>
+                        <span>${item.title}</span>
+                    </td>
+                    <td class="p-3 text-slate-600 whitespace-pre-line text-[11px] leading-relaxed max-w-sm">${item.detail}</td>
+                    <td class="p-3 font-semibold text-emerald-700">${item.cap}</td>
+                    <td class="p-3 text-center">
+                        <button onclick="showToast('แก้ไขข้อมูลสวัสดิการสำเร็จ')" class="p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg transition" title="แก้ไข">
+                            <i class="fa-solid fa-pen-to-square"></i>
+                        </button>
+                    </td>
+                `;
+                body.appendChild(tr);
+            });
+        }
+
+        function filterAdminMasterTable() {
+            const val = document.getElementById('adminMasterSearch')?.value || '';
+            renderAdminMasterTable(val);
+        }
+
+        // Render Employee Welfare Ledger Records
+        function renderEmployeeLedger() {
+            const body = document.getElementById('employeeLedgerTableBody');
+            if (!body) return;
+            body.innerHTML = '';
+
+            const deptVal = document.getElementById('filterEmpDept')?.value || 'all';
+            const searchVal = (document.getElementById('adminLedgerSearch')?.value || '').toLowerCase();
+
+            const filtered = sampleLedgerRecords.filter(rec => {
+                const matchDept = (deptVal === 'all') || (rec.dept === deptVal);
+                const matchSearch = rec.empName.toLowerCase().includes(searchVal) || 
+                                    rec.empId.toLowerCase().includes(searchVal) || 
+                                    rec.title.toLowerCase().includes(searchVal);
+                return matchDept && matchSearch;
+            });
+
+            filtered.forEach(rec => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50 transition";
+
+                tr.innerHTML = `
+                    <td class="p-3 font-mono text-slate-500 whitespace-nowrap">${rec.date || '-'}</td>
+                    <td class="p-3">
+                        <div class="font-semibold text-slate-900">${rec.empName}</div>
+                        <div class="text-[10px] text-slate-500">${rec.empId} • แผนก ${rec.dept}</div>
+                    </td>
+                    <td class="p-3 font-bold text-indigo-700">${rec.title}</td>
+                    <td class="p-3 text-[11px] text-slate-600">${rec.note}</td>
+                    <td class="p-3 text-right font-bold ${rec.amount > 0 ? 'text-emerald-600' : 'text-slate-400'}">${rec.amount > 0 ? rec.amount.toLocaleString() + ' ฿' : '-'}</td>
+                    <td class="p-3 text-center">
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-100 text-emerald-700 border border-emerald-200">${rec.status}</span>
+                    </td>
+                `;
+                body.appendChild(tr);
+            });
+        }
+
+        function filterEmployeeLedger() {
+            renderEmployeeLedger();
+        }
+
+        // Render Department Cards
+        function renderDepartmentSummary() {
+            const container = document.getElementById('deptCardsContainer');
+            if (!container) return;
+
+            const depts = [
+                { name: "ทีมขาย (Sales)", icon: "fa-chart-line", count: 24, budget: "120,000 ฿", used: "84,500 ฿", pct: 70, popular: "ประกันภัยรถยนต์" },
+                { name: "เทคโนโลยีสารสนเทศ (IT)", icon: "fa-laptop-code", count: 18, budget: "90,000 ฿", used: "42,000 ฿", pct: 46, popular: "เครื่องแบบพนักงาน" },
+                { name: "ทรัพยากรบุคคล (HR)", icon: "fa-users-gear", count: 8, budget: "40,000 ฿", used: "28,000 ฿", pct: 70, popular: "ช่วยงานแต่ง / OPD" },
+                { name: "การเงินและบัญชี (Finance)", icon: "fa-calculator", count: 12, budget: "60,000 ฿", used: "31,500 ฿", pct: 52, popular: "เงินช่วยค่าจัดงานศพ" },
+                { name: "การตลาด (Marketing)", icon: "fa-bullhorn", count: 10, budget: "50,000 ฿", used: "22,000 ฿", pct: 44, popular: "ตรวจสุขภาพประจำปี" }
+            ];
+
+            container.innerHTML = depts.map(d => `
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-2xs space-y-3">
+                    <div class="flex justify-between items-start">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-indigo-50 border border-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-lg">
+                                <i class="fa-solid ${d.icon}"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-xs font-bold text-slate-900">${d.name}</h4>
+                                <div class="text-[10px] text-slate-500">${d.count} พนักงาน</div>
+                            </div>
+                        </div>
+                        <span class="text-[10px] font-semibold text-indigo-600 bg-indigo-50 border border-indigo-100 px-2 py-0.5 rounded-full">${d.pct}% ใช้ไป</span>
+                    </div>
+
+                    <div class="space-y-1.5 pt-2 border-t border-slate-100 text-xs">
+                        <div class="flex justify-between text-[11px]">
+                            <span class="text-slate-500">งบจัดสรรรวม:</span>
+                            <span class="font-semibold text-slate-800">${d.budget}</span>
+                        </div>
+                        <div class="flex justify-between text-[11px]">
+                            <span class="text-slate-500">เบิกจ่ายจริง:</span>
+                            <span class="font-bold text-indigo-600">${d.used}</span>
+                        </div>
+                        <div class="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                            <div class="bg-indigo-600 h-1.5 rounded-full" style="width: ${d.pct}%"></div>
+                        </div>
+                    </div>
+
+                    <div class="text-[10px] text-slate-500 pt-1 flex justify-between">
+                        <span>สวัสดิการยอดฮิต:</span>
+                        <span class="font-medium text-slate-700">${d.popular}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Render Level Summary Cards
+        function renderLevelSummary() {
+            const container = document.getElementById('levelCardsContainer');
+            if (!container) return;
+
+            const levels = [
+                { name: "Executive / C-Level", count: 4, avg: "28,500 ฿", top: "ประกันภัยรถยนต์" },
+                { name: "Manager / Supervisor", count: 14, avg: "18,200 ฿", top: "ประกันภัยรถยนต์ / OPD" },
+                { name: "Senior Staff", count: 28, avg: "11,400 ฿", top: "OPD / เครื่องแบบ" },
+                { name: "Officer / Junior Staff", count: 26, avg: "6,800 ฿", top: "ตรวจสุขภาพประจำปี" }
+            ];
+
+            container.innerHTML = levels.map(l => `
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-2xs space-y-3">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-purple-50 border border-purple-100 text-purple-600 flex items-center justify-center font-bold text-lg">
+                            <i class="fa-solid fa-ranking-star"></i>
+                        </div>
+                        <div>
+                            <h4 class="text-xs font-bold text-slate-900">${l.name}</h4>
+                            <div class="text-[10px] text-slate-500">${l.count} พนักงานในระดับนี้</div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-1 pt-2 border-t border-slate-100 text-xs">
+                        <div class="text-[10px] text-slate-500">ยอดเบิกจ่ายเฉลี่ย / คน</div>
+                        <div class="text-base font-bold text-purple-700">${l.avg}</div>
+                    </div>
+
+                    <div class="text-[10px] text-slate-500 border-t border-slate-100 pt-2 flex justify-between">
+                        <span>รายการเบิกหลัก:</span>
+                        <span class="font-semibold text-slate-800">${l.top}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Populate Individual Employee Select Dropdown
+        function populateIndividualEmpSelect() {
+            const select = document.getElementById('individualEmpSelect');
+            if (!select) return;
+            select.innerHTML = '';
+
+            sampleEmployeesList.forEach(emp => {
+                const opt = document.createElement('option');
+                opt.value = emp.id;
+                opt.textContent = `${emp.id} - ${emp.name} (${emp.dept})`;
+                select.appendChild(opt);
+            });
+
+            if (sampleEmployeesList.length > 0) {
+                renderIndividualEmployeePassport(sampleEmployeesList[0].id);
+            }
+        }
+
+        // Render Employee Welfare Passport Detail Box
+        function renderIndividualEmployeePassport(empId) {
+            const container = document.getElementById('employeePassportDetail');
+            if (!container) return;
+
+            const emp = sampleEmployeesList.find(e => e.id === empId) || sampleEmployeesList[0];
+            const empRecords = sampleLedgerRecords.filter(r => r.empId === emp.id);
+
+            container.innerHTML = `
+                <div class="bg-gradient-to-r from-slate-900 to-indigo-950 text-white rounded-2xl p-6 shadow-md space-y-6">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-800 pb-5">
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-xl bg-indigo-500/20 border border-indigo-400/30 text-indigo-300 flex items-center justify-center text-xl font-bold">
+                                <i class="fa-solid fa-id-badge"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-bold text-white">${emp.name}</h3>
+                                <div class="text-xs text-slate-400 font-mono">${emp.id} • ${emp.role} (${emp.dept})</div>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-2 bg-white/10 px-3 py-1.5 rounded-xl border border-white/10 text-xs">
+                            <i class="fa-solid fa-calendar-day text-indigo-400"></i>
+                            <span>บรรจุงาน: ${emp.joined}</span>
+                        </div>
+                    </div>
+
+                    <!-- Individual Summary Cards -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="bg-white/5 border border-white/10 p-4 rounded-xl">
+                            <div class="text-[11px] text-slate-400">สิทธิ์คงเหลือ (กลุ่มสวัสดิการทั่วไป)</div>
+                            <div class="text-xl font-bold text-emerald-400 mt-1">3 / 3 สิทธิ์</div>
+                            <div class="text-[10px] text-slate-400 mt-1">ใช้งานครบตามเงื่อนไข</div>
+                        </div>
+
+                        <div class="bg-white/5 border border-white/10 p-4 rounded-xl">
+                            <div class="text-[11px] text-slate-400">ยอดเบิกสวัสดิการสะสมปี 2026</div>
+                            <div class="text-xl font-bold text-indigo-300 mt-1">14,700 ฿</div>
+                            <div class="text-[10px] text-slate-400 mt-1">จากประกันภัยรถยนต์ & OPD</div>
+                        </div>
+
+                        <div class="bg-white/5 border border-white/10 p-4 rounded-xl">
+                            <div class="text-[11px] text-slate-400">สิทธิ์คงเหลือประกันภัยรถยนต์</div>
+                            <div class="text-xl font-bold text-amber-300 mt-1">2,500 ฿</div>
+                            <div class="text-[10px] text-slate-400 mt-1">จากวงเงินเต็ม 15,000 ฿</div>
+                        </div>
+                    </div>
+
+                    <!-- Recorded History Table -->
+                    <div class="bg-white/5 rounded-xl border border-white/10 p-4 space-y-3">
+                        <h4 class="text-xs font-bold text-slate-200 flex items-center gap-2">
+                            <i class="fa-solid fa-receipt text-emerald-400"></i>
+                            <span>ประวัติรายการที่บันทึกไว้ (${empRecords.length} รายการ)</span>
+                        </h4>
+
+                        ${empRecords.length > 0 ? `
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left text-xs">
+                                    <thead>
+                                        <tr class="border-b border-white/10 text-slate-400 text-[11px]">
+                                            <th class="py-2 px-3">วันที่บันทึก</th>
+                                            <th class="py-2 px-3">ชื่อรายการสวัสดิการ</th>
+                                            <th class="py-2 px-3">รายละเอียด / หมายเหตุ</th>
+                                            <th class="py-2 px-3 text-right">จำนวนเงิน</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-white/5">
+                                        ${empRecords.map(r => `
+                                            <tr class="text-slate-300">
+                                                <td class="py-2.5 px-3 font-mono text-[11px] text-slate-400">${r.date}</td>
+                                                <td class="py-2.5 px-3 font-bold text-indigo-300">${r.title}</td>
+                                                <td class="py-2.5 px-3 text-slate-400 text-[11px]">${r.note}</td>
+                                                <td class="py-2.5 px-3 text-right font-bold text-emerald-400">${r.amount.toLocaleString()} ฿</td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        ` : `
+                            <div class="text-center py-4 text-xs text-slate-400">ยังไม่มีประวัติการบันทึกสวัสดิการ</div>
+                        `}
+                    </div>
+
+                    <!-- Individual Welfare Items Breakdown -->
+                    <div class="bg-white/5 rounded-xl border border-white/10 p-4">
+                        <h4 class="text-xs font-bold text-slate-200 mb-3 flex items-center gap-2">
+                            <i class="fa-solid fa-list-check text-indigo-400"></i>
+                            <span>สรุปสถานะสวัสดิการรายข้อ (15 รายการ)</span>
+                        </h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
+                            ${welfareMasterData.map(w => `
+                                <div class="p-2.5 rounded-lg bg-white/5 border border-white/5 flex items-center justify-between">
+                                    <span class="text-slate-300 text-[11px] flex items-center gap-2">
+                                        <i class="fa-solid ${w.icon} text-indigo-400"></i>
+                                        ${w.title}
+                                    </span>
+                                    <span class="text-[10px] text-slate-400">
+                                        ${w.cap !== '-' ? w.cap : 'ตามเงื่อนไขบริษัท'}
+                                    </span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Switch Portal (User vs Admin)
+        function switchPortal(portal) {
+            const userPortal = document.getElementById('portalUser');
+            const adminPortal = document.getElementById('portalAdmin');
+            const btnUser = document.getElementById('btnUserView');
+            const btnAdmin = document.getElementById('btnAdminView');
+
+            if (portal === 'user') {
+                userPortal?.classList.remove('hidden');
+                adminPortal?.classList.add('hidden');
+                if (btnUser) btnUser.className = "px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 flex items-center gap-2 bg-white text-indigo-600 shadow-xs border border-slate-200";
+                if (btnAdmin) btnAdmin.className = "px-3.5 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:text-indigo-600 transition-all duration-200 flex items-center gap-2";
+            } else {
+                userPortal?.classList.add('hidden');
+                adminPortal?.classList.remove('hidden');
+                if (btnAdmin) btnAdmin.className = "px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 flex items-center gap-2 bg-white text-indigo-600 shadow-xs border border-slate-200";
+                if (btnUser) btnUser.className = "px-3.5 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:text-indigo-600 transition-all duration-200 flex items-center gap-2";
+            }
+        }
+
+        // Switch Admin Sub-tabs
+        function switchAdminSummaryTab(tab) {
+            const vOverview = document.getElementById('adminViewOverview');
+            const vDept = document.getElementById('adminViewDept');
+            const vLevel = document.getElementById('adminViewLevel');
+            const vIndividual = document.getElementById('adminViewIndividual');
+
+            const tOverview = document.getElementById('adminTabOverview');
+            const tDept = document.getElementById('adminTabDept');
+            const tLevel = document.getElementById('adminTabLevel');
+            const tIndividual = document.getElementById('adminTabIndividual');
+
+            [vOverview, vDept, vLevel, vIndividual].forEach(v => v?.classList.add('hidden'));
+            [tOverview, tDept, tLevel, tIndividual].forEach(t => {
+                if (t) t.className = "px-4 py-2 rounded-xl text-xs font-medium text-slate-600 hover:text-indigo-600 transition flex items-center gap-2 whitespace-nowrap";
+            });
+
+            if (tab === 'overview') {
+                vOverview?.classList.remove('hidden');
+                if (tOverview) tOverview.className = "px-4 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-2 bg-indigo-600 text-white shadow-xs whitespace-nowrap";
+            } else if (tab === 'dept') {
+                vDept?.classList.remove('hidden');
+                if (tDept) tDept.className = "px-4 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-2 bg-indigo-600 text-white shadow-xs whitespace-nowrap";
+            } else if (tab === 'level') {
+                vLevel?.classList.remove('hidden');
+                if (tLevel) tLevel.className = "px-4 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-2 bg-indigo-600 text-white shadow-xs whitespace-nowrap";
+            } else if (tab === 'individual') {
+                vIndividual?.classList.remove('hidden');
+                if (tIndividual) tIndividual.className = "px-4 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-2 bg-indigo-600 text-white shadow-xs whitespace-nowrap";
+            }
+        }
+
+        // Template Upload Modal Functions
+        function openTemplateUploadModal() {
+            const modal = document.getElementById('templateUploadModal');
+            if (modal) modal.classList.remove('hidden');
+            
+            const select = document.getElementById('uploadCategorySelect');
+            if (select && select.options.length <= 1) {
+                welfareMasterData.forEach(item => {
+                    const opt = document.createElement('option');
+                    opt.value = item.id;
+                    opt.textContent = `${item.id}. ${item.title}`;
+                    select.appendChild(opt);
+                });
+            }
+        }
+
+        function closeTemplateUploadModal() {
+            const modal = document.getElementById('templateUploadModal');
+            if (modal) modal.classList.add('hidden');
+        }
+
+        function downloadSampleTemplate() {
+            showToast("ดาวน์โหลดไฟล์ Template สำเร็จแล้ว");
+        }
+
+        function handleFileSelect(input) {
+            if (input.files && input.files[0]) {
+                const previewSection = document.getElementById('previewSection');
+                const previewCount = document.getElementById('previewCount');
+                const previewBody = document.getElementById('previewTableBody');
+                const btnImport = document.getElementById('btnConfirmImport');
+
+                if (previewSection) previewSection.classList.remove('hidden');
+                if (previewCount) previewCount.textContent = "3";
+
+                if (previewBody) {
+                    previewBody.innerHTML = `
+                        <tr>
+                            <td class="p-2 font-mono font-semibold text-indigo-600">EMP001</td>
+                            <td class="p-2">ประกันภัยรถยนต์</td>
+                            <td class="p-2 font-bold text-slate-800">12,500 บาท</td>
+                            <td class="p-2 text-slate-500">อัปเดตกรมธรรม์ประจำปี</td>
+                        </tr>
+                        <tr>
+                            <td class="p-2 font-mono font-semibold text-indigo-600">EMP002</td>
+                            <td class="p-2">ประกันภัยรถยนต์</td>
+                            <td class="p-2 font-bold text-slate-800">18,500 บาท</td>
+                            <td class="p-2 text-slate-500">อนุมัติตามตำแหน่งผู้บริหาร</td>
+                        </tr>
+                        <tr>
+                            <td class="p-2 font-mono font-semibold text-indigo-600">EMP003</td>
+                            <td class="p-2">เครื่องแบบพนักงาน</td>
+                            <td class="p-2 font-bold text-slate-800">2,500 บาท</td>
+                            <td class="p-2 text-slate-500">แจกชุด Backoffice 3 ชุด</td>
+                        </tr>
+                    `;
+                }
+
+                if (btnImport) {
+                    btnImport.disabled = false;
+                    btnImport.className = "px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold transition shadow-md shadow-indigo-100 cursor-pointer";
+                }
+            }
+        }
+
+        function executeBatchImport() {
+            closeTemplateUploadModal();
+            showToast("ซิงค์และบันทึกข้อมูลสวัสดิการสำเร็จ 3 รายการ");
+        }
+
+        function exportWelfareReport() {
+            showToast("ระบบส่งออกไฟล์รายงานเรียบร้อยแล้ว");
+        }
+
+        // Toast Notification System
+        function showToast(msg) {
+            const toast = document.getElementById('toastNotification');
+            const toastMsg = document.getElementById('toastMessage');
+            if (!toast || !toastMsg) return;
+
+            toastMsg.textContent = msg;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+
+        // Chart Initialization
+        function initCharts() {
+            const ctxPieEl = document.getElementById('welfarePieChart');
+            const ctxBarEl = document.getElementById('monthlyBarChart');
+
+            if (ctxPieEl) {
+                new Chart(ctxPieEl.getContext('2d'), {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['สิทธิ์สวัสดิการทั่วไป (3)', 'สิทธิ์มีวงเงิน/บันทึก (12)'],
+                        datasets: [{
+                            data: [3, 12],
+                            backgroundColor: ['#10b981', '#6366f1'],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: { color: '#475569', font: { family: 'Kanit', size: 11 } }
+                            }
+                        },
+                        cutout: '72%'
+                    }
+                });
+            }
+
+            if (ctxBarEl) {
+                new Chart(ctxBarEl.getContext('2d'), {
+                    type: 'bar',
+                    data: {
+                        labels: ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.'],
+                        datasets: [{
+                            label: 'ยอดเบิกสวัสดิการรวม (บาท)',
+                            data: [42000, 38500, 51000, 29000, 44000, 38000, 15000, 15000],
+                            backgroundColor: '#6366f1',
+                            borderRadius: 6
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false }
+                        },
+                        scales: {
+                            x: { ticks: { color: '#64748b', font: { family: 'Kanit' } }, grid: { display: false } },
+                            y: { ticks: { color: '#64748b', font: { family: 'Kanit' } }, grid: { color: '#f1f5f9' } }
+                        }
+                    }
+                });
+            }
+        }
+
+        // Safe Initialization on Page Load
+        window.addEventListener('DOMContentLoaded', () => {
+            renderUserUnifiedTable('all', '');
+            renderAdmin4LevelMatrix();
+            renderAdminMasterTable('');
+            renderEmployeeLedger();
+            renderDepartmentSummary();
+            renderLevelSummary();
+            populateIndividualEmpSelect();
+            initCharts();
+        });
+    </script>
+</body>
+</html>
